@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { navigate } from "wouter/use-browser-location";
+
 
 const profileSchema = z.object({
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
@@ -75,31 +77,83 @@ export default function ProfileCompletion() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileForm) => {
-      await apiPut("/api/profile/complete", data);
+      // Convertir la date en format ISO string pour l'envoi
+      const formattedData = {
+        ...data,
+        birthDate: data.birthDate ? data.birthDate.toISOString() : undefined
+      };
+      
+      console.log("Envoi des données de profil:", formattedData);
+      await apiPut("/api/profile/complete", formattedData);
     },
-    onSuccess: () => {
+    onSuccess: async() => {
       toast({
         title: "Profil complété",
         description: "Vos informations ont été enregistrées avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      window.location.href = "/"; // Redirect to dashboard
+      // Forcer le refresh du user
+         await queryClient.fetchQuery({ queryKey: ["/api/auth/user"] });
+     // queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // navigate("/dashboard"); 
+     window.location.href = "/"; // Redirect to dashboard
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Erreur lors de la completion du profil:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement.",
+        description: error?.message || "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.",
         variant: "destructive",
       });
     }
   });
 
-  const onSubmit = (data: ProfileForm) => {
+  const onSubmit = async (data: ProfileForm) => {
+    // Vérifier que tous les champs sont valides
+    const isValid = await form.trigger();
+    
+    if (!isValid) {
+      toast({
+        title: "Formulaire incomplet",
+        description: "Veuillez corriger les erreurs dans le formulaire.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log("Données du formulaire:", data);
     updateProfileMutation.mutate(data);
   };
 
-  const nextStep = () => {
-    setStep(prev => Math.min(prev + 1, 4));
+  const nextStep = async () => {
+    // Valider les champs de l'étape actuelle avant de continuer
+    let fieldsToValidate: (keyof ProfileForm)[] = [];
+    
+    switch (step) {
+      case 1:
+        fieldsToValidate = ['firstName', 'lastName', 'gender', 'maritalStatus', 'phone'];
+        break;
+      case 2:
+        fieldsToValidate = ['address', 'residencePlace'];
+        break;
+      case 3:
+        fieldsToValidate = ['idDocumentType', 'idDocumentNumber'];
+        break;
+      case 4:
+        fieldsToValidate = ['birthDate', 'birthPlace', 'birthCountry', 'nationality'];
+        break;
+    }
+    
+    const isValid = await form.trigger(fieldsToValidate);
+    
+    if (isValid) {
+      setStep(prev => Math.min(prev + 1, 4));
+    } else {
+      toast({
+        title: "Informations manquantes",
+        description: "Veuillez remplir tous les champs requis avant de continuer.",
+        variant: "destructive",
+      });
+    }
   };
 
   const prevStep = () => {

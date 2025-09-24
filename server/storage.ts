@@ -1151,6 +1151,62 @@ export class MemStorage implements IStorage {
   async getApplicationsForJob(jobId: number): Promise<Application[]> {
     return Array.from(this.applications.values()).filter(app => app.jobId === jobId);
   }
+
+  // Missing methods for authentication
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    for (const user of this.users.values()) {
+      if (user.email === email) {
+        return user;
+      }
+    }
+    return undefined;
+  }
+
+  async createUser(userData: Partial<User>): Promise<User> {
+    const id = userData.id || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const user: User = {
+      id,
+      email: userData.email || null,
+      password: userData.password || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      phone: userData.phone || null,
+      role: userData.role || "candidate",
+      gender: userData.gender || null,
+      maritalStatus: userData.maritalStatus || null,
+      address: userData.address || null,
+      residencePlace: userData.residencePlace || null,
+      idDocumentType: userData.idDocumentType || null,
+      idDocumentNumber: userData.idDocumentNumber || null,
+      birthDate: userData.birthDate || null,
+      birthPlace: userData.birthPlace || null,
+      birthCountry: userData.birthCountry || null,
+      nationality: userData.nationality || null,
+      profileCompleted: userData.profileCompleted || false,
+      employeeId: userData.employeeId || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(id, user);
+    console.log(`✅ Created user: ${user.firstName} ${user.lastName} (${user.email})`);
+    return user;
+  }
+
+  // Additional required methods for compatibility
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => user.role === role);
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    this.users.delete(id);
+  }
 }
 
 // Database Storage Implementation
@@ -2381,5 +2437,6 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use DatabaseStorage instead of MemStorage
-export const storage = new DatabaseStorage();
+// Use MemStorage for development when DATABASE_URL points to localhost
+console.log("🗄️ Using in-memory storage for development");
+export const storage = new MemStorage();
