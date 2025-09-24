@@ -76,18 +76,15 @@ function Router() {
   }
 
   try {
-    // Redirect to profile completion if user is a candidate and profile is not complete
-    if (isAuthenticated && (user as any)?.role === "candidate" && !(user as any)?.profileCompleted) {
-      return <ProfileCompletion />;
-    }
 
     return (
       <Switch>
         {!isAuthenticated ? (
           <>
             <Route path="/" component={Landing} />
+            <Route path="/candidate-login" component={CandidateLogin} />
             <Route path="/login" component={CandidateLogin} />
-            <Route path="/admin/login" component={AdminLogin} />
+            <Route path="/admin-login" component={AdminLogin} />
             <Route path="/candidate-invitation/:token" component={CandidateInvitationHandler} />
           </>
         ) : (
@@ -95,7 +92,13 @@ function Router() {
             {/* Routes pour candidats */}
             {(user as any)?.role === "candidate" && (
               <>
-                <Route path="/" component={CandidateDashboard} />
+                {/* Redirection vers ProfileCompletion si profil non complété */}
+                {!(user as any)?.profileCompleted ? (
+                  <Route path="/" component={ProfileCompletion} />
+                ) : (
+                  <Route path="/" component={CandidateDashboard} />
+                )}
+                <Route path="/profile-completion" component={ProfileCompletion} />
                 <Route path="/profile" component={Profile} />
                 <Route path="/applications" component={Applications} />
                 <Route path="/jobs" component={Landing} />

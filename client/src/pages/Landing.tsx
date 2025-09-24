@@ -51,7 +51,7 @@ export default function Landing() {
 
   const handleApply = (job: Job) => {
     // Redirection vers la page de connexion candidat
-    window.location.href = "/login";
+    window.location.href = "/candidate-login";
   };
 
   const handleContractFilter = (contractType: string, checked: boolean) => {
@@ -123,6 +123,14 @@ export default function Landing() {
               
               <div className="hidden sm:flex items-center space-x-2">
               </div>
+              
+              <Button 
+                onClick={() => window.location.href = "/candidate-login"}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                data-testid="button-candidate-login"
+              >
+                Connexion Candidat
+              </Button>
               
               <Button 
                 variant="ghost" 

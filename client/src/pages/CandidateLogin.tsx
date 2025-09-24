@@ -55,9 +55,9 @@ export default function CandidateLogin() {
     mutationFn: async (data: LoginFormData) => {
       return apiPost("/api/auth/login", data);
     },
-    onSuccess: (response) => {
-      // Redirection vers le dashboard candidat
-      setLocation(response.redirectPath || "/dashboard");
+    onSuccess: () => {
+      // Forcer le rechargement de la page pour déclencher la vérification du profil
+      window.location.href = "/";
     },
     onError: (error: any) => {
       setError(error.message || "Erreur de connexion");
@@ -68,9 +68,9 @@ export default function CandidateLogin() {
     mutationFn: async (data: RegisterFormData) => {
       return apiPost("/api/auth/register", data);
     },
-    onSuccess: (response) => {
-      // Redirection vers le dashboard candidat
-      setLocation(response.redirectPath || "/dashboard");
+    onSuccess: () => {
+      // Forcer le rechargement de la page pour déclencher la vérification du profil
+      window.location.href = "/";
     },
     onError: (error: any) => {
       setError(error.message || "Erreur lors de l'inscription");
@@ -324,7 +324,7 @@ export default function CandidateLogin() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setLocation("/admin/login")}
+            onClick={() => window.location.href = "/admin-login"}
             data-testid="link-admin"
             className="border-blue-200 text-blue-600 hover:bg-blue-50"
           >

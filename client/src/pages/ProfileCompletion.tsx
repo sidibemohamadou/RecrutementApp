@@ -92,10 +92,12 @@ export default function ProfileCompletion() {
         description: "Vos informations ont été enregistrées avec succès.",
       });
       // Forcer le refresh du user
-         await queryClient.fetchQuery({ queryKey: ["/api/auth/user"] });
-     // queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      // navigate("/dashboard"); 
-     window.location.href = "/"; // Redirect to dashboard
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      // Attendre un peu pour que les données soient mises à jour
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
     },
     onError: (error: any) => {
       console.error("Erreur lors de la completion du profil:", error);
