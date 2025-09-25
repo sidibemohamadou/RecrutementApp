@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, UserPlus, LogIn, ArrowLeft, Plane } from "lucide-react";
-import { apiPost } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -53,7 +53,8 @@ export default function CandidateLogin() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      return apiPost("/api/auth/login", data);
+      const response = await apiRequest("POST", "/api/auth/login", data);
+      return response.json();
     },
     onSuccess: () => {
       // Forcer le rechargement de la page pour déclencher la vérification du profil
@@ -66,7 +67,8 @@ export default function CandidateLogin() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterFormData) => {
-      return apiPost("/api/auth/register", data);
+      const response = await apiRequest("POST", "/api/auth/register", data);
+      return response.json();
     },
     onSuccess: () => {
       // Forcer le rechargement de la page pour déclencher la vérification du profil
@@ -336,7 +338,8 @@ export default function CandidateLogin() {
         <div className="mt-8 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
           <h3 className="font-medium text-yellow-800 mb-2">💡 Comptes de test</h3>
           <div className="text-sm text-yellow-700 space-y-1">
-            <p><strong>Candidat:</strong> candidat.test@example.com / candidate123</p>
+            <p><strong>Candidat:</strong> jean.dupont@example.com / candidate123</p>
+            <p><strong>Nouveau candidat:</strong> Créez un compte avec le bouton "Créer un compte"</p>
           </div>
         </div>
       </div>

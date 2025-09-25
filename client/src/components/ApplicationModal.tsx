@@ -26,10 +26,6 @@ interface ApplicationModalProps {
 }
 
 const applicationFormSchema = insertApplicationSchema.extend({
-  firstName: z.string().min(1, "Le prénom est requis"),
-  lastName: z.string().min(1, "Le nom est requis"),
-  email: z.string().email("Email invalide"),
-  phone: z.string().optional(),
   consent: z.boolean().refine(val => val === true, "Vous devez accepter le traitement des données"),
 });
 
@@ -44,11 +40,7 @@ export function ApplicationModal({ job, isOpen, onClose }: ApplicationModalProps
     defaultValues: {
       jobId: job?.id || 0,
       coverLetter: "",
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      availabilityDate: undefined,
+      availability: undefined,
       salaryExpectation: "",
       consent: false,
     },
@@ -56,12 +48,11 @@ export function ApplicationModal({ job, isOpen, onClose }: ApplicationModalProps
 
   const createApplicationMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { firstName, lastName, email, phone, consent, ...applicationData } = data;
+      const { consent, ...applicationData } = data;
       const response = await apiRequest("POST", "/api/applications", {
         ...applicationData,
         cvPath: cvFile,
         motivationLetterPath: motivationFile,
-        phone,
       });
       return response.json();
     },
@@ -155,77 +146,9 @@ export function ApplicationModal({ job, isOpen, onClose }: ApplicationModalProps
               <h3 className="text-lg font-semibold text-foreground mb-4">
                 Informations personnelles
               </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Prénom *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          data-testid="input-first-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          data-testid="input-last-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="email" 
-                          {...field} 
-                          data-testid="input-email"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Téléphone</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="tel" 
-                          {...field} 
-                          placeholder="+33 1 23 45 67 89"
-                          data-testid="input-phone"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Vos informations personnelles seront automatiquement utilisées depuis votre profil.
+              </p>
             </div>
 
             {/* Documents */}
@@ -304,7 +227,7 @@ export function ApplicationModal({ job, isOpen, onClose }: ApplicationModalProps
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="availabilityDate"
+                  name="availability"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Date de disponibilité</FormLabel>
@@ -312,8 +235,8 @@ export function ApplicationModal({ job, isOpen, onClose }: ApplicationModalProps
                         <Input 
                           type="date" 
                           {...field}
-                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(e.target.value)}
                           data-testid="input-availability-date"
                         />
                       </FormControl>

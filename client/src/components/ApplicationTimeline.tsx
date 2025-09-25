@@ -33,6 +33,8 @@ interface ApplicationTimelineProps {
     diplomaPath?: string;
     autoScore?: number;
     manualScore?: number;
+    availability?: string;
+    salaryExpectation?: string;
   };
 }
 

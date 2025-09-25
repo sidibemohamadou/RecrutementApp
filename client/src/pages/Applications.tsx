@@ -286,9 +286,9 @@ export default function Applications() {
                             Prétentions: {application.salaryExpectation}
                           </span>
                         )}
-                        {application.availabilityDate && (
+                        {application.availability && (
                           <span data-testid={`text-availability-${application.id}`}>
-                            Disponible: {new Date(application.availabilityDate).toLocaleDateString()}
+                            Disponible: {new Date(application.availability).toLocaleDateString()}
                           </span>
                         )}
                       </div>

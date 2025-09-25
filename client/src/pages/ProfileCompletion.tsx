@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, User, MapPin, FileText, Globe, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { apiPut } from "@/lib/api";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -84,7 +84,8 @@ export default function ProfileCompletion() {
       };
       
       console.log("Envoi des données de profil:", formattedData);
-      await apiPut("/api/profile/complete", formattedData);
+      const response = await apiRequest("PUT", "/api/profile/complete", formattedData);
+      return response.json();
     },
     onSuccess: async() => {
       toast({

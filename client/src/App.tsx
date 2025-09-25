@@ -94,18 +94,22 @@ function Router() {
               <>
                 {/* Redirection vers ProfileCompletion si profil non complété */}
                 {!(user as any)?.profileCompleted ? (
-                  <Route path="/" component={ProfileCompletion} />
+                  <>
+                    <Route path="/" component={ProfileCompletion} />
+                    <Route path="/profile-completion" component={ProfileCompletion} />
+                  </>
                 ) : (
-                  <Route path="/" component={CandidateDashboard} />
+                  <>
+                    <Route path="/" component={CandidateDashboard} />
+                    <Route path="/profile" component={Profile} />
+                    <Route path="/applications" component={Applications} />
+                    <Route path="/jobs" component={Landing} />
+                    <Route path="/candidate-onboarding" component={CandidateOnboarding} />
+                    <Route path="/onboarding-feedback" component={OnboardingFeedback} />
+                    <Route path="/achievements" component={AchievementsPage} />
+                    <Route path="/onboarding-calendar" component={OnboardingCalendar} />
+                  </>
                 )}
-                <Route path="/profile-completion" component={ProfileCompletion} />
-                <Route path="/profile" component={Profile} />
-                <Route path="/applications" component={Applications} />
-                <Route path="/jobs" component={Landing} />
-                <Route path="/candidate-onboarding" component={CandidateOnboarding} />
-                <Route path="/onboarding-feedback" component={OnboardingFeedback} />
-                <Route path="/achievements" component={AchievementsPage} />
-                <Route path="/onboarding-calendar" component={OnboardingCalendar} />
               </>
             )}
             

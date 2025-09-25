@@ -34,11 +34,12 @@ export default function AdminLogin() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      return apiRequest("POST", "/api/admin/auth/login", data);
+      const response = await apiRequest("POST", "/api/admin/auth/login", data);
+      return response.json();
     },
-    onSuccess: (response) => {
+    onSuccess: (data) => {
       // Redirection selon le rôle admin
-      setLocation(response.redirectPath || "/admin");
+      setLocation(data.redirectPath || "/admin");
     },
     onError: (error: any) => {
       setError(error.message || "Erreur de connexion");

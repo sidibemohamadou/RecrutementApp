@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,16 +26,50 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 export default function Profile() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    bio: "",
-    experience: "",
-    skills: "",
+    gender: "",
+    maritalStatus: "",
+    address: "",
+    residencePlace: "",
+    idDocumentType: "",
+    idDocumentNumber: "",
+    birthDate: "",
+    birthPlace: "",
+    birthCountry: "",
+    nationality: "",
   });
 
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ["/api/profile"],
+    enabled: isAuthenticated,
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", "/api/profile", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profil mis à jour",
+        description: "Vos informations ont été sauvegardées avec succès.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la mise à jour du profil",
+        variant: "destructive",
+      });
+    }
+  });
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -47,20 +83,27 @@ export default function Profile() {
       return;
     }
 
-    if (user) {
+    if (profile) {
       setFormData({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        email: user.email || "",
-        phone: "",
-        bio: "",
-        experience: "",
-        skills: "",
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        gender: profile.gender || "",
+        maritalStatus: profile.maritalStatus || "",
+        address: profile.address || "",
+        residencePlace: profile.residencePlace || "",
+        idDocumentType: profile.idDocumentType || "",
+        idDocumentNumber: profile.idDocumentNumber || "",
+        birthDate: profile.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : "",
+        birthPlace: profile.birthPlace || "",
+        birthCountry: profile.birthCountry || "",
+        nationality: profile.nationality || "",
       });
     }
-  }, [isAuthenticated, isLoading, toast, user]);
+  }, [isAuthenticated, isLoading, toast, profile]);
 
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -77,10 +120,13 @@ export default function Profile() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Profil mis à jour",
-      description: "Vos informations ont été sauvegardées avec succès.",
-    });
+    
+    const updateData = {
+      ...formData,
+      birthDate: formData.birthDate ? new Date(formData.birthDate) : null
+    };
+    
+    updateProfileMutation.mutate(updateData);
   };
 
   return (
@@ -100,16 +146,119 @@ export default function Profile() {
             <div className="flex items-center space-x-4">
               <LanguageSelector />
               
-              <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
+            {/* Address Information */}
                 <Bell className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
-                  3
+                <CardTitle>Adresse et résidence</CardTitle>
                 </span>
               </Button>
               
-              <div className="flex items-center space-x-2">
+                  <Label htmlFor="address">Adresse complète</Label>
                 <div className="h-8 w-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                  {user.firstName?.[0] || user.email?.[0] || 'U'}
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="Adresse complète (rue, quartier, ville...)"
+                    rows={3}
+                    data-testid="textarea-profile-address"
+                      <SelectTrigger data-testid="select-profile-gender">
+                        <SelectValue placeholder="Sélectionnez votre sexe" />
+                      </SelectTrigger>
+                  <Label htmlFor="residencePlace">Lieu de résidence</Label>
+                  <Input
+                    id="residencePlace"
+                    value={formData.residencePlace}
+                    onChange={(e) => setFormData(prev => ({ ...prev, residencePlace: e.target.value }))}
+                    placeholder="Ex: Dakar, Thiès, Saint-Louis..."
+                    data-testid="input-profile-residence"
+                    <Label htmlFor="maritalStatus">Situation matrimoniale</Label>
+                    <Select value={formData.maritalStatus} onValueChange={(value) => setFormData(prev => ({ ...prev, maritalStatus: value }))}>
+              </CardContent>
+            </Card>
+
+            {/* Identity Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pièce d'identité</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="idDocumentType">Type de pièce</Label>
+                    <Select value={formData.idDocumentType} onValueChange={(value) => setFormData(prev => ({ ...prev, idDocumentType: value }))}>
+                      <SelectTrigger data-testid="select-profile-id-type">
+                        <SelectValue placeholder="Type de pièce" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CNI">Carte Nationale d'Identité</SelectItem>
+                        <SelectItem value="Passeport">Passeport</SelectItem>
+                        <SelectItem value="Permis de séjour">Permis de séjour</SelectItem>
+                        <SelectItem value="Carte consulaire">Carte consulaire</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="idDocumentNumber">Numéro d'identification</Label>
+                    <Input
+                      id="idDocumentNumber"
+                      value={formData.idDocumentNumber}
+                      onChange={(e) => setFormData(prev => ({ ...prev, idDocumentNumber: e.target.value }))}
+                      placeholder="Numéro de votre pièce d'identité"
+                      data-testid="input-profile-id-number"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+                      <SelectTrigger data-testid="select-profile-marital-status">
+            {/* Birth Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Informations de naissance</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                        <SelectValue placeholder="Sélectionnez votre situation" />
+                  <Label htmlFor="birthDate">Date de naissance</Label>
+                  <Input
+                    id="birthDate"
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
+                    data-testid="input-profile-birth-date"
+                    </Select>
+                  </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="birthPlace">Lieu de naissance</Label>
+                    <Input
+                      id="birthPlace"
+                      value={formData.birthPlace}
+                      onChange={(e) => setFormData(prev => ({ ...prev, birthPlace: e.target.value }))}
+                      placeholder="Ville ou lieu de naissance"
+                      data-testid="input-profile-birth-place"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="birthCountry">Pays de naissance</Label>
+                    <Input
+                      id="birthCountry"
+                      value={formData.birthCountry}
+                      onChange={(e) => setFormData(prev => ({ ...prev, birthCountry: e.target.value }))}
+                      placeholder="Pays de naissance"
+                      data-testid="input-profile-birth-country"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="nationality">Nationalité</Label>
+                  <Input
+                    id="nationality"
+                    value={formData.nationality}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nationality: e.target.value }))}
+                    placeholder="Votre nationalité"
+                    data-testid="input-profile-nationality"
+                  />
+                </div>
                 </div>
                 <span className="text-sm font-medium" data-testid="text-user-name">
                   {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
@@ -117,11 +266,12 @@ export default function Profile() {
                 <Button 
                   variant="ghost" 
                   size="icon"
+                disabled={updateProfileMutation.isPending}
                   onClick={() => window.location.href = "/api/logout"}
                   data-testid="button-logout"
                 >
                   <ChevronDown className="h-4 w-4" />
-                </Button>
+                <span>{updateProfileMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}</span>
               </div>
             </div>
           </div>

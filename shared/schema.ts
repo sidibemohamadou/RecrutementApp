@@ -587,8 +587,6 @@ export const insertApplicationSchema = createInsertSchema(applications).omit({
   userId: true,
   createdAt: true,
   updatedAt: true,
-}).extend({
-  availability: z.string().optional().nullable()
 });
 
 export const updateApplicationSchema = insertApplicationSchema.partial();

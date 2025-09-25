@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ApplicationModal } from "@/components/ApplicationModal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +31,8 @@ export default function Landing() {
   const [experienceFilters, setExperienceFilters] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("newest");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ["/api/jobs", searchQuery, locationQuery, contractFilters.join(','), experienceFilters.join(',')],
@@ -50,8 +53,8 @@ export default function Landing() {
   };
 
   const handleApply = (job: Job) => {
-    // Redirection vers la page de connexion candidat
-    window.location.href = "/candidate-login";
+    setSelectedJob(job);
+    setIsApplicationModalOpen(true);
   };
 
   const handleContractFilter = (contractType: string, checked: boolean) => {
@@ -462,6 +465,15 @@ export default function Landing() {
         </div>
       </footer>
 
+      {/* Application Modal */}
+      <ApplicationModal
+        job={selectedJob}
+        isOpen={isApplicationModalOpen}
+        onClose={() => {
+          setIsApplicationModalOpen(false);
+          setSelectedJob(null);
+        }}
+      />
     </div>
   );
 }

@@ -46,6 +46,10 @@ export default function CandidateDashboard() {
     enabled: isAuthenticated,
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["/api/profile"],
+    enabled: isAuthenticated,
+  });
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -79,7 +83,7 @@ export default function CandidateDashboard() {
     applicationsCount: applications.length,
     pendingCount: applications.filter(app => app.status === 'pending').length,
     interviewsCount: applications.filter(app => app.status === 'interview').length,
-    profileCompletion: 85, // This would be calculated based on completed profile fields
+    profileCompletion: profile?.profileCompleted ? 100 : 50,
   };
 
   const recentApplications = applications.slice(0, 3);
