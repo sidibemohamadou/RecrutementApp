@@ -514,15 +514,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== ROUTES GESTION UTILISATEURS =====
   
+  // Route pour changer le mot de passe
+  app.put("/api/auth/change-password", requireAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user.id;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      // Vérifier le mot de passe actuel
+      const user = await storage.getUser(userId);
+      if (!user || !user.password) {
+        return res.status(400).json({ message: "User not found or no password set" });
+      }
+
+      const { AuthService } = await import("./auth");
+      const isValidPassword = await AuthService.verifyPassword(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Hasher le nouveau mot de passe
+      const hashedNewPassword = await AuthService.hashPassword(newPassword);
+      
+      // Mettre à jour le mot de passe
+      await storage.updateUser(userId, { password: hashedNewPassword });
+      
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
   app.get("/api/users", requireAuth, async (req, res) => {
     try {
-      const currentUser = await storage.getUser(req.user.id);
-      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'hr')) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
-      const { role } = req.query;
-      const users = role ? await storage.getUsersByRole(role as string) : await storage.getAllUsers();
+      const { UserManagementService } = await import("./userManagementService");
+      const users = await UserManagementService.getAccessibleUsers(req.user);
       res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -530,51 +560,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/users", requireAuth, async (req, res) => {
+    try {
+      const { UserManagementService } = await import("./userManagementService");
+      const userData = req.body;
+      
+      const newUser = await UserManagementService.createUser(req.user, userData);
+      
+      // Ne pas retourner le mot de passe
+      const { password, ...userResponse } = newUser;
+      res.status(201).json(userResponse);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Failed to create user" 
+      });
+    }
+  });
   app.put("/api/users/:id", requireAuth, async (req, res) => {
     try {
-      const currentUser = await storage.getUser(req.user.id);
-      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'hr')) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-      
+      const { UserManagementService } = await import("./userManagementService");
       const { id } = req.params;
       const updateData = req.body;
       
-      // Ne pas permettre de modifier son propre rôle
-      if (id === req.user.id && updateData.role && updateData.role !== currentUser.role) {
-        return res.status(400).json({ message: "Cannot modify your own role" });
-      }
+      const updatedUser = await UserManagementService.updateUser(req.user, id, updateData);
       
-      const updatedUser = await storage.updateUser(id, updateData);
-      res.json(updatedUser);
+      // Ne pas retourner le mot de passe
+      const { password, ...userResponse } = updatedUser;
+      res.json(userResponse);
     } catch (error) {
       console.error("Error updating user:", error);
-      res.status(500).json({ message: "Failed to update user" });
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Failed to update user" 
+      });
     }
   });
 
   app.delete("/api/users/:id", requireAuth, async (req, res) => {
     try {
-      const currentUser = await storage.getUser(req.user.id);
-      if (!currentUser || currentUser.role !== 'admin') {
-        return res.status(403).json({ message: "Access denied - Admin only" });
-      }
-      
+      const { UserManagementService } = await import("./userManagementService");
       const { id } = req.params;
       
-      // Ne pas permettre de supprimer son propre compte
-      if (id === req.user.id) {
-        return res.status(400).json({ message: "Cannot delete your own account" });
-      }
-      
-      await storage.deleteUser(id);
+      await UserManagementService.deleteUser(req.user, id);
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       console.error("Error deleting user:", error);
-      res.status(500).json({ message: "Failed to delete user" });
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Failed to delete user" 
+      });
     }
   });
 
+  // Route pour récupérer les rôles disponibles selon les permissions
+  app.get("/api/users/available-roles", requireAuth, async (req, res) => {
+    try {
+      const { UserManagementService } = await import("./userManagementService");
+      const availableRoles = UserManagementService.getAvailableRoles(req.user.role);
+      res.json(availableRoles);
+    } catch (error) {
+      console.error("Error fetching available roles:", error);
+      res.status(500).json({ message: "Failed to fetch available roles" });
+    }
+  });
+
+  // Route pour récupérer les permissions de l'utilisateur actuel
+  app.get("/api/users/permissions", requireAuth, async (req, res) => {
+    try {
+      const { UserManagementService } = await import("./userManagementService");
+      const permissions = UserManagementService.getUserPermissions(req.user.role);
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching user permissions:", error);
+      res.status(500).json({ message: "Failed to fetch permissions" });
+    }
+  });
   // ===== ROUTES GESTION PAIE =====
   
   app.get("/api/payroll", requireAuth, async (req, res) => {

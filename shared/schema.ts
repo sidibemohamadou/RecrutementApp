@@ -37,6 +37,9 @@ export const users = pgTable("users", {
   phone: varchar("phone"),
   role: text("role").default("candidate"), // candidate, recruiter, hr, admin
   
+  // Département de travail
+  department: varchar("department"),
+  
   // Informations personnelles détaillées
   gender: text("gender"), // Homme, Femme, Autre
   maritalStatus: text("marital_status"), // Célibataire, Marié(e), Divorcé(e), Veuf(ve)

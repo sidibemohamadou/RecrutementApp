@@ -32,6 +32,7 @@ import InterviewManagement from "@/pages/InterviewManagement";
 import EmployeeManagement from "@/pages/EmployeeManagement";
 import CandidateInvitations from "@/pages/CandidateInvitations";
 import CandidateInvitationHandler from "@/pages/CandidateInvitationHandler";
+import AdminProfile from "@/pages/AdminProfile";
 import NotFound from "@/pages/not-found";
 
 // Système de notification simple (remplace Toaster)
@@ -134,6 +135,7 @@ function Router() {
                 <Route path="/admin/interviews" component={InterviewManagement} />
                 <Route path="/admin/employees" component={EmployeeManagement} />
                 <Route path="/admin/invitations" component={CandidateInvitations} />
+                <Route path="/admin/profile" component={AdminProfile} />
                 {(user as any)?.role === "admin" && (
                   <Route path="/admin/users" component={UserManagement} />
                 )}

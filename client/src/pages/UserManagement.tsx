@@ -41,6 +41,7 @@ import { Users, UserPlus, Edit, Trash2, Shield, Mail, Phone } from "lucide-react
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
+import { Link } from "wouter";
 
 const updateUserSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis"),
@@ -182,6 +183,24 @@ export default function UserManagement() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Navigation */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Link href="/admin">
+            <Button variant="ghost">
+              <Briefcase className="h-4 w-4 mr-2" />
+              Tableau de bord
+            </Button>
+          </Link>
+          <Link href="/admin/profile">
+            <Button variant="ghost">
+              <User className="h-4 w-4 mr-2" />
+              Mon Profil
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Gestion des Utilisateurs</h1>

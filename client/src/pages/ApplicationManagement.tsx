@@ -208,6 +208,12 @@ export default function ApplicationManagement() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link href="/admin/profile">
+                <Button variant="ghost" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  Profil
+                </Button>
+              </Link>
               <span className="text-sm text-muted-foreground">
                 {user?.firstName} {user?.lastName}
               </span>
